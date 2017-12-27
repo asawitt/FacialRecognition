@@ -14,7 +14,7 @@ import os
 
 batch_size = 10
 num_epochs = 5
-num_datapoints = 1
+num_datapoints = 5
 
 input_base_directory = "../Datasets/Images/"
 
@@ -33,11 +33,11 @@ def str_to_img(s):
 def shape(line):
 	return np.array(list(map(lambda x: int(x), line.split(",")))).reshape(-1,28)
 
-def make_model(alpha):
+def make_model():
 	model = Sequential()
 	model.add(Conv2D(32, kernel_size=(3, 3),
 	                 activation='relu',
-	                 input_shape=(28,28,1)))
+	                 input_shape=(150,90,1)))
 	model.add(Conv2D(64, (3, 3), activation='relu'))
 	# model.add(MaxPooling2D(pool_size=(2, 2)))
 	# model.add(Dropout(0.25))
@@ -77,20 +77,28 @@ def get_test_accuracy(test_data,test_labels,model):
 
 def get_images(num_datapoints,sub_dir):
 	img_base_path = input_base_directory + sub_dir + "/"
-	images = np.array([])
+	images = []
 	for i in range(1,num_datapoints+1):
 		img_path = img_base_path + sub_dir + "_frame_" + str(i).zfill(2) + ".png"
-		img = cv2.imread(img_path)
-		print(img.shape)
-		np.append(images,img)
-
+		img = cv2.imread(img_path,0) #0 for grayscale 
+		images.append(img)
+	return images
 
 def main():
-	test_data = np.array([])
-	test_labels = np.array([])
+	train_data = []
+	train_labels = []
 
-	np.append(test_data,get_images(num_datapoints,"Face"))
-	np.append(test_labels, ([1,0] for i in range(num_datapoints)))
+	train_data += get_images(num_datapoints,"Face")
+	train_labels += ([1,0] for i in range(num_datapoints))
+
+	train_data = np.array(train_data)
+	train_labels = np.array(train_labels)
+
+	train_data = train_data.reshape(len(train_data),150,90,1)
+
+	model = make_model()
+	model.fit(train_data,train_labels,epochs=1,batch_size=batch_size)
+
 
 	# test_data.append(get_images(num_datapoints,"Other"))
 	# test_labels.append([0,1] for i in range(num_datapoints))
